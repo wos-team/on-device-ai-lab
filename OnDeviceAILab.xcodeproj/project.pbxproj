@@ -1,0 +1,89 @@
+// !$*UTF8*$!
+{
+    archiveVersion = 1;
+    classes = {};
+    objectVersion = 77;
+    objects = {
+        A10000000000000000000001 = {
+            isa = PBXProject;
+            buildConfigurationList = A10000000000000000000007;
+            developmentRegion = ja;
+            knownRegions = (ja, Base);
+            mainGroup = A10000000000000000000002;
+            productRefGroup = A10000000000000000000003;
+            preferredProjectObjectVersion = 77;
+            targets = (A10000000000000000000004);
+        };
+        A10000000000000000000002 = {
+            isa = PBXGroup;
+            children = (A10000000000000000000005, A10000000000000000000016, A10000000000000000000003);
+            sourceTree = "<group>";
+        };
+        A10000000000000000000003 = {
+            isa = PBXGroup;
+            children = (A10000000000000000000006);
+            name = Products;
+            sourceTree = "<group>";
+        };
+        A10000000000000000000004 = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = A10000000000000000000008;
+            buildPhases = (A10000000000000000000009, A10000000000000000000010, A10000000000000000000011);
+            buildRules = ();
+            dependencies = ();
+            fileSystemSynchronizedGroups = (A10000000000000000000005);
+            name = OnDeviceAILab;
+            productName = OnDeviceAILab;
+            productReference = A10000000000000000000006;
+            productType = "com.apple.product-type.application";
+        };
+        A10000000000000000000005 = {
+            isa = PBXFileSystemSynchronizedRootGroup;
+            path = App;
+            sourceTree = "<group>";
+        };
+        A10000000000000000000006 = {
+            isa = PBXFileReference;
+            explicitFileType = wrapper.application;
+            includeInIndex = 0;
+            path = OnDeviceAILab.app;
+            sourceTree = BUILT_PRODUCTS_DIR;
+        };
+        A10000000000000000000007 = {
+            isa = XCConfigurationList;
+            buildConfigurations = (A10000000000000000000012, A10000000000000000000013);
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Release;
+        };
+        A10000000000000000000008 = {
+            isa = XCConfigurationList;
+            buildConfigurations = (A10000000000000000000014, A10000000000000000000015);
+            defaultConfigurationIsVisible = 0;
+            defaultConfigurationName = Release;
+        };
+        A10000000000000000000009 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+        A10000000000000000000010 = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+        A10000000000000000000011 = { isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+        A10000000000000000000012 = {
+            isa = XCBuildConfiguration;
+            baseConfigurationReference = A10000000000000000000016;
+            buildSettings = { SWIFT_OPTIMIZATION_LEVEL = "-Onone"; };
+            name = Debug;
+        };
+        A10000000000000000000013 = {
+            isa = XCBuildConfiguration;
+            baseConfigurationReference = A10000000000000000000016;
+            buildSettings = { SWIFT_COMPILATION_MODE = wholemodule; };
+            name = Release;
+        };
+        A10000000000000000000014 = { isa = XCBuildConfiguration; buildSettings = {}; name = Debug; };
+        A10000000000000000000016 = {
+            isa = PBXFileReference;
+            lastKnownFileType = text.xcconfig;
+            path = Build.xcconfig;
+            sourceTree = "<group>";
+        };
+        A10000000000000000000015 = { isa = XCBuildConfiguration; buildSettings = {}; name = Release; };
+    };
+    rootObject = A10000000000000000000001;
+}
