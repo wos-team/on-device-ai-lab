@@ -9,7 +9,7 @@ struct OnDeviceAILab: App {
     var body: some Scene {
         WindowGroup {
             NavigationStack {
-                CatalogView()
+                DemoHome()
             }
             .tint(.indigo)
         }
@@ -17,7 +17,7 @@ struct OnDeviceAILab: App {
 }
 
 @MainActor
-private struct CatalogView: View {
+struct CatalogView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var availability = SystemLanguageModel.default.availability
 
@@ -69,7 +69,7 @@ private struct CatalogView: View {
                 }
             }
         }
-        .navigationTitle("オンデバイスAIラボ")
+        .navigationTitle("ローカルLLM基本機能")
         .onChange(of: scenePhase, initial: true) { _, phase in
             if phase == .active {
                 availability = SystemLanguageModel.default.availability

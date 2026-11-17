@@ -1,89 +1,195 @@
 // !$*UTF8*$!
 {
-    archiveVersion = 1;
-    classes = {};
-    objectVersion = 77;
-    objects = {
-        A10000000000000000000001 = {
-            isa = PBXProject;
-            buildConfigurationList = A10000000000000000000007;
-            developmentRegion = ja;
-            knownRegions = (ja, Base);
-            mainGroup = A10000000000000000000002;
-            productRefGroup = A10000000000000000000003;
-            preferredProjectObjectVersion = 77;
-            targets = (A10000000000000000000004);
-        };
-        A10000000000000000000002 = {
-            isa = PBXGroup;
-            children = (A10000000000000000000005, A10000000000000000000016, A10000000000000000000003);
-            sourceTree = "<group>";
-        };
-        A10000000000000000000003 = {
-            isa = PBXGroup;
-            children = (A10000000000000000000006);
-            name = Products;
-            sourceTree = "<group>";
-        };
-        A10000000000000000000004 = {
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXFileReference section */
+        B10000000000000000000001 = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = DemoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A10000000000000000000006 /* OnDeviceAILab.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OnDeviceAILab.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A10000000000000000000016 /* Build.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Build.xcconfig; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+        B10000000000000000000002 = {isa = PBXFileSystemSynchronizedRootGroup; path = Tests; sourceTree = "<group>"; };
+		A10000000000000000000005 /* App */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = App;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+        B10000000000000000000006 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		A10000000000000000000010 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A10000000000000000000002 = {
+			isa = PBXGroup;
+			children = (
+                B10000000000000000000002,
+				A10000000000000000000005 /* App */,
+				A10000000000000000000016 /* Build.xcconfig */,
+				A10000000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A10000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+                B10000000000000000000001,
+				A10000000000000000000006 /* OnDeviceAILab.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+        B10000000000000000000003 = {
             isa = PBXNativeTarget;
-            buildConfigurationList = A10000000000000000000008;
-            buildPhases = (A10000000000000000000009, A10000000000000000000010, A10000000000000000000011);
+            buildConfigurationList = B10000000000000000000004;
+            buildPhases = (B10000000000000000000005, B10000000000000000000006);
             buildRules = ();
             dependencies = ();
-            fileSystemSynchronizedGroups = (A10000000000000000000005);
-            name = OnDeviceAILab;
-            productName = OnDeviceAILab;
-            productReference = A10000000000000000000006;
-            productType = "com.apple.product-type.application";
+            fileSystemSynchronizedGroups = (B10000000000000000000002);
+            name = DemoTests;
+            productName = DemoTests;
+            productReference = B10000000000000000000001;
+            productType = "com.apple.product-type.bundle.ui-testing";
         };
-        A10000000000000000000005 = {
-            isa = PBXFileSystemSynchronizedRootGroup;
-            path = App;
-            sourceTree = "<group>";
-        };
-        A10000000000000000000006 = {
-            isa = PBXFileReference;
-            explicitFileType = wrapper.application;
-            includeInIndex = 0;
-            path = OnDeviceAILab.app;
-            sourceTree = BUILT_PRODUCTS_DIR;
-        };
-        A10000000000000000000007 = {
-            isa = XCConfigurationList;
-            buildConfigurations = (A10000000000000000000012, A10000000000000000000013);
-            defaultConfigurationIsVisible = 0;
-            defaultConfigurationName = Release;
-        };
-        A10000000000000000000008 = {
-            isa = XCConfigurationList;
-            buildConfigurations = (A10000000000000000000014, A10000000000000000000015);
-            defaultConfigurationIsVisible = 0;
-            defaultConfigurationName = Release;
-        };
-        A10000000000000000000009 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
-        A10000000000000000000010 = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
-        A10000000000000000000011 = { isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
-        A10000000000000000000012 = {
-            isa = XCBuildConfiguration;
-            baseConfigurationReference = A10000000000000000000016;
-            buildSettings = { SWIFT_OPTIMIZATION_LEVEL = "-Onone"; };
-            name = Debug;
-        };
-        A10000000000000000000013 = {
-            isa = XCBuildConfiguration;
-            baseConfigurationReference = A10000000000000000000016;
-            buildSettings = { SWIFT_COMPILATION_MODE = wholemodule; };
-            name = Release;
-        };
-        A10000000000000000000014 = { isa = XCBuildConfiguration; buildSettings = {}; name = Debug; };
-        A10000000000000000000016 = {
-            isa = PBXFileReference;
-            lastKnownFileType = text.xcconfig;
-            path = Build.xcconfig;
-            sourceTree = "<group>";
-        };
-        A10000000000000000000015 = { isa = XCBuildConfiguration; buildSettings = {}; name = Release; };
-    };
-    rootObject = A10000000000000000000001;
+		A10000000000000000000004 /* OnDeviceAILab */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A10000000000000000000008 /* Build configuration list for PBXNativeTarget "OnDeviceAILab" */;
+			buildPhases = (
+				A10000000000000000000009 /* Sources */,
+				A10000000000000000000010 /* Frameworks */,
+				A10000000000000000000011 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				A10000000000000000000005 /* App */,
+			);
+			name = OnDeviceAILab;
+			productName = OnDeviceAILab;
+			productReference = A10000000000000000000006 /* OnDeviceAILab.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A10000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+			};
+			buildConfigurationList = A10000000000000000000007 /* Build configuration list for PBXProject "OnDeviceAILab" */;
+			developmentRegion = ja;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				ja,
+				Base,
+			);
+			mainGroup = A10000000000000000000002;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = A10000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+                B10000000000000000000003,
+				A10000000000000000000004 /* OnDeviceAILab */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A10000000000000000000011 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+        B10000000000000000000005 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		A10000000000000000000009 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+        B10000000000000000000007 = {isa = XCBuildConfiguration; buildSettings = { SDKROOT = iphoneos; IPHONEOS_DEPLOYMENT_TARGET = 26.0; SWIFT_VERSION = 6.0; TARGETED_DEVICE_FAMILY = 1; GENERATE_INFOPLIST_FILE = YES; TEST_TARGET_NAME = OnDeviceAILab; PRODUCT_NAME = "$(TARGET_NAME)"; PRODUCT_BUNDLE_IDENTIFIER = jp.matsuokakoki.OnDeviceAILabTests; }; name = Debug; };
+        B10000000000000000000008 = {isa = XCBuildConfiguration; buildSettings = { SDKROOT = iphoneos; IPHONEOS_DEPLOYMENT_TARGET = 26.0; SWIFT_VERSION = 6.0; TARGETED_DEVICE_FAMILY = 1; GENERATE_INFOPLIST_FILE = YES; TEST_TARGET_NAME = OnDeviceAILab; PRODUCT_NAME = "$(TARGET_NAME)"; PRODUCT_BUNDLE_IDENTIFIER = jp.matsuokakoki.OnDeviceAILabTests; }; name = Release; };
+		A10000000000000000000012 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = A10000000000000000000016 /* Build.xcconfig */;
+			buildSettings = {
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A10000000000000000000013 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = A10000000000000000000016 /* Build.xcconfig */;
+			buildSettings = {
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		A10000000000000000000014 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEVELOPMENT_TEAM = QB588QF587;
+			};
+			name = Debug;
+		};
+		A10000000000000000000015 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEVELOPMENT_TEAM = QB588QF587;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+        B10000000000000000000004 = {isa = XCConfigurationList; buildConfigurations = (B10000000000000000000007, B10000000000000000000008); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		A10000000000000000000007 /* Build configuration list for PBXProject "OnDeviceAILab" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A10000000000000000000012 /* Debug */,
+				A10000000000000000000013 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A10000000000000000000008 /* Build configuration list for PBXNativeTarget "OnDeviceAILab" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A10000000000000000000014 /* Debug */,
+				A10000000000000000000015 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A10000000000000000000001 /* Project object */;
 }

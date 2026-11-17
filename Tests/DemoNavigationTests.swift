@@ -1,0 +1,45 @@
+import XCTest
+
+final class DemoNavigationTests: XCTestCase {
+    @MainActor
+    func testDemoNavigationAndAudioLifecycle() {
+        let app = XCUIApplication()
+        app.launch()
+        XCTAssertTrue(app.navigationBars["Apple機能ラボ"].waitForExistence(timeout: 10))
+        open("ローカルLLM基本機能", in: app)
+        XCTAssertTrue(app.buttons["文章生成"].exists)
+        app.navigationBars.buttons.firstMatch.tap()
+
+        for name in ["顔を3Dの点群で見る", "空中に絵を描く", "拍手で花火",
+                     "机にロボットを置く", "体でロボットを動かす", "まばたきゲーム",
+                     "ビー玉の手触り", "耳でたどる迷路", "近くの端末へライブ映像", "iPhoneで宝探し"] {
+            open(name, in: app)
+            if name == "ビー玉の手触り" {
+                app.buttons["弱い衝突"].tap()
+                app.buttons["強い衝突"].tap()
+            }
+            if name == "耳でたどる迷路" {
+                app.buttons["迷路を開始"].tap()
+                XCTAssertTrue(app.buttons["音を停止"].waitForExistence(timeout: 5))
+                // Route around the wall to the sound source.
+                for step in ["右", "右", "上", "上", "上", "左", "左"] {
+                    app.buttons[step].tap()
+                }
+                XCTAssertTrue(app.staticTexts["ゴール！ 音源にたどり着きました。"].exists)
+            }
+            app.navigationBars.buttons.firstMatch.tap()
+        }
+    }
+
+    @MainActor
+    private func open(_ title: String, in app: XCUIApplication) {
+        let button = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", title)).firstMatch
+        for _ in 0..<7 {
+            if button.exists && button.isHittable { break }
+            app.swipeUp()
+        }
+        XCTAssertTrue(button.exists, title)
+        button.tap()
+        XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 8), title)
+    }
+}
