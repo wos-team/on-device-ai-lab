@@ -77,7 +77,9 @@ private final class SoundGame {
             self.analyzer = analyzer
             self.observer = observer
             let queue = DispatchQueue(label: "lab.sound-analysis")
-            input.installTap(onBus: 0, bufferSize: 4096, format: format) { buffer, time in
+            // AVAudioEngine invokes this on its audio thread. Explicit Sendable
+            // prevents the callback from inheriting SoundGame's MainActor.
+            input.installTap(onBus: 0, bufferSize: 4096, format: format) { @Sendable buffer, time in
                 queue.async { analyzer.analyze(buffer, atAudioFramePosition: time.sampleTime) }
             }
             listening = true

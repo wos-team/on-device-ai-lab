@@ -32,6 +32,30 @@ final class DemoNavigationTests: XCTestCase {
     }
 
     @MainActor
+    func testMicrophoneCanStartStopAndRestart() {
+        let app = XCUIApplication()
+        app.launch()
+        open("拍手で花火", in: app)
+
+        for _ in 0..<3 {
+            app.buttons["マイクをオン"].tap()
+            let listening = app.staticTexts["聞き取り中 · 拍手か笑い声を試してください"]
+            XCTAssertTrue(listening.waitForExistence(timeout: 10))
+            // Keep the tap running so callbacks arrive from the audio thread.
+            let until = Date().addingTimeInterval(3)
+            while Date() < until {
+                XCTAssertEqual(app.state, .runningForeground)
+                RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+            }
+            XCTAssertTrue(app.buttons["停止"].exists)
+            app.buttons["停止"].tap()
+            XCTAssertTrue(app.buttons["マイクをオン"].waitForExistence(timeout: 5))
+        }
+        app.navigationBars.buttons.firstMatch.tap()
+        XCTAssertTrue(app.navigationBars["Apple機能ラボ"].exists)
+    }
+
+    @MainActor
     private func open(_ title: String, in app: XCUIApplication) {
         let button = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", title)).firstMatch
         for _ in 0..<7 {
