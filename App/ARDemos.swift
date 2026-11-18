@@ -23,7 +23,7 @@ struct PlacementDemo: View {
     @State private var status = "机や床にカメラを向けてください。"
 
     var body: some View {
-        DemoScreen(title: "机にロボットを置く", instruction: "机や床にゆっくりカメラを向け、置きたい場所をタップ。横に移動して、ロボットを別の角度から見てください。") {
+        DemoScreen(title: "机にロボットを置く", instruction: "机や床にゆっくりカメラを向け、置きたい場所をタップ。横に移動して、ロボットを別の角度から見てください。", guide: .placement) {
             if ARWorldTrackingConfiguration.isSupported {
                 PlacementSurface { status = $0 }
                     .clipShape(.rect(cornerRadius: 18))
@@ -97,7 +97,7 @@ struct BodyDemo: View {
     @State private var status = "カメラの前に友達の全身が入るようにしてください。"
 
     var body: some View {
-        DemoScreen(title: "体でロボットを動かす", instruction: "友達に2〜3m離れて立ってもらい、手を振ったり踊ったりしてみてください。ロボットがその場でまねします。") {
+        DemoScreen(title: "体でロボットを動かす", instruction: "友達に2〜3m離れて立ってもらい、手を振ったり踊ったりしてみてください。ロボットがその場でまねします。", guide: .body) {
             if ARBodyTrackingConfiguration.isSupported {
                 BodySurface { status = $0 }
                     .clipShape(.rect(cornerRadius: 18))
@@ -138,6 +138,7 @@ private struct BodySurface: UIViewRepresentable {
         private var anchor: AnchorEntity?
         private var head: ModelEntity?
         private var limbs: [Limb] = []
+        private var joints: [String: SIMD3<Float>] = [:]
 
         init(status: @escaping (String) -> Void) { self.status = status }
 
@@ -146,6 +147,7 @@ private struct BodySurface: UIViewRepresentable {
         func session(_ session: ARSession, didRemove anchors: [ARAnchor]) {
             guard anchors.contains(where: { $0 is ARBodyAnchor }) else { return }
             anchor?.isEnabled = false
+            joints.removeAll()
             status("全身が画面に入る位置に戻ってください。")
         }
 
@@ -153,16 +155,24 @@ private struct BodySurface: UIViewRepresentable {
 
         private func update(_ anchors: [ARAnchor]) {
             guard let view, let body = anchors.compactMap({ $0 as? ARBodyAnchor }).first else { return }
-            guard body.isTracked else { anchor?.isEnabled = false; return }
+            guard body.isTracked else { anchor?.isEnabled = false; joints.removeAll(); return }
 
             let skeleton = body.skeleton
-            func joint(_ name: String) -> SIMD3<Float>? {
-                guard let transform = skeleton.modelTransform(for: ARSkeleton.JointName(rawValue: name)) else { return nil }
-                return SIMD3(transform.columns.3.x, transform.columns.3.y, transform.columns.3.z)
-            }
-            guard let headPosition = joint("head_joint") else { return }
             if anchor == nil { makeRobot(in: view) }
             guard let anchor else { return }
+            let names = Set(limbs.flatMap { [$0.from, $0.to] } + ["head_joint"])
+            var nextJoints: [String: SIMD3<Float>] = [:]
+            for name in names {
+                guard let transform = skeleton.modelTransform(for: ARSkeleton.JointName(rawValue: name)) else { continue }
+                let measured = SIMD3(transform.columns.3.x, transform.columns.3.y, transform.columns.3.z)
+                guard measured.x.isFinite && measured.y.isFinite && measured.z.isFinite else { continue }
+                nextJoints[name] = joints[name].map { $0 + (measured - $0) * 0.62 } ?? measured
+            }
+            joints = nextJoints
+            guard let headPosition = joints["head_joint"] else {
+                anchor.isEnabled = false
+                return
+            }
             var transform = body.transform
             // Offset the robot to the person's right so both remain visible.
             transform.columns.3 += body.transform.columns.0 * 0.65
@@ -170,7 +180,7 @@ private struct BodySurface: UIViewRepresentable {
             anchor.isEnabled = true
             head?.position = headPosition
             for limb in limbs {
-                guard let from = joint(limb.from), let to = joint(limb.to) else {
+                guard let from = joints[limb.from], let to = joints[limb.to] else {
                     limb.entity.isEnabled = false
                     continue
                 }
@@ -229,7 +239,7 @@ struct BlinkDemo: View {
     @State private var landing: Task<Void, Never>?
 
     var body: some View {
-        DemoScreen(title: "まばたきゲーム", instruction: "左目・右目だけを閉じて移動。星の下で口を開けるとジャンプして取れます。") {
+        DemoScreen(title: "まばたきゲーム", instruction: "左目・右目だけを閉じて移動。星の下で口を開けるとジャンプして取れます。", guide: .face) {
             if ARFaceTrackingConfiguration.isSupported {
                 ZStack(alignment: .bottom) {
                     RoundedRectangle(cornerRadius: 18).fill(.indigo.gradient)

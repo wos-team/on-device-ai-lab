@@ -4,18 +4,37 @@ import CoreMotion
 @preconcurrency import SoundAnalysis
 import SwiftUI
 
+private enum SoundEvent: Hashable, Sendable {
+    case clap, laugh
+
+    init?(identifier: String) {
+        if identifier.contains("clap") || identifier.contains("applause") { self = .clap }
+        else if identifier.contains("laugh") || identifier.contains("giggle") || identifier.contains("chuckle") { self = .laugh }
+        else { return nil }
+    }
+
+    var label: String { self == .clap ? "拍手" : "笑い声" }
+}
+
 private final class SoundObserver: NSObject, SNResultsObserving, @unchecked Sendable {
-    let update: @Sendable (String, Double) -> Void
+    let update: @Sendable (SoundEvent?, Double) -> Void
     let failure: @Sendable (String) -> Void
-    init(update: @escaping @Sendable (String, Double) -> Void, failure: @escaping @Sendable (String) -> Void) {
+    init(update: @escaping @Sendable (SoundEvent?, Double) -> Void, failure: @escaping @Sendable (String) -> Void) {
         self.update = update
         self.failure = failure
     }
 
     func request(_ request: SNRequest, didProduce result: SNResult) {
         guard let result = result as? SNClassificationResult,
-              let detection = result.classifications.first else { return }
-        update(detection.identifier, detection.confidence)
+              let strongest = result.classifications.first else { return }
+        for candidate in result.classifications.prefix(3)
+            where candidate.confidence >= max(0.26, strongest.confidence * 0.6) {
+            if let event = SoundEvent(identifier: candidate.identifier) {
+                update(event, candidate.confidence)
+                return
+            }
+        }
+        update(nil, 0)
     }
 
     func request(_ request: SNRequest, didFailWithError error: Error) { failure(error.localizedDescription) }
@@ -36,13 +55,14 @@ private final class SoundGame {
     private var observer: SoundObserver?
     private var listening = false
     private var generation = UUID()
-    private var previous: Date = .distantPast
+    private var lastDetection: [SoundEvent: Date] = [:]
 
     func start() async {
         guard !running else { return }
         generation = UUID()
         let id = generation
         running = true
+        lastDetection.removeAll()
         status = "マイクを準備中…"
         guard await AVAudioApplication.requestRecordPermission() else {
             if generation == id { stop(message: "設定でマイクへのアクセスを許可してください。") }
@@ -62,10 +82,10 @@ private final class SoundGame {
             let request = try SNClassifySoundRequest(classifierIdentifier: .version1)
             request.windowDuration = CMTime(seconds: 1, preferredTimescale: 1000)
             request.overlapFactor = 0.75
-            let observer = SoundObserver { [weak self] identifier, confidence in
+            let observer = SoundObserver { [weak self] event, confidence in
                 Task { @MainActor in
                     guard let self, self.generation == id else { return }
-                    self.handle(identifier, confidence: confidence)
+                    self.handle(event, confidence: confidence)
                 }
             } failure: { [weak self] error in
                 Task { @MainActor in
@@ -103,16 +123,17 @@ private final class SoundGame {
         status = message
     }
 
-    private func handle(_ identifier: String, confidence: Double) {
-        let isClap = identifier.contains("clap") || identifier.contains("applause")
-        let isLaugh = identifier.contains("laugh") || identifier.contains("giggle") || identifier.contains("chuckle")
-        guard confidence >= 0.28, isClap || isLaugh else { return }
+    private func handle(_ event: SoundEvent?, confidence: Double) {
+        guard let event else { return }
         let now = Date()
-        guard now.timeIntervalSince(previous) > 0.95 else { return }
-        previous = now
-        status = "\(identifier) · \(confidence.formatted(.percent.precision(.fractionLength(0))))"
-        if isClap { claps += 1; burst = now }
-        if isLaugh { laughs += 1; dance = now }
+        let previous = lastDetection.updateValue(now, forKey: event)
+        // Overlapping model windows can report the same sound several times.
+        guard previous.map({ now.timeIntervalSince($0) > 0.65 }) ?? true else { return }
+        status = "\(event.label) · \(confidence.formatted(.percent.precision(.fractionLength(0))))"
+        switch event {
+        case .clap: claps += 1; burst = now
+        case .laugh: laughs += 1; dance = now
+        }
     }
 }
 
@@ -121,7 +142,7 @@ struct SoundDemo: View {
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
-        DemoScreen(title: "拍手で花火", instruction: "マイクをオンにして数回拍手すると花火。笑うと画面のロボットが踊ります。") {
+        DemoScreen(title: "拍手で花火", instruction: "マイクをオンにして数回拍手すると花火。笑うと画面のロボットが踊ります。", guide: .sound) {
             TimelineView(.animation(paused: !game.running)) { timeline in
                 let danceTime = game.dance.map { timeline.date.timeIntervalSince($0) } ?? 10
                 ZStack {
@@ -268,7 +289,7 @@ struct MarbleDemo: View {
 
     var body: some View {
         @Bindable var physics = physics
-        DemoScreen(title: "ビー玉の手触り", instruction: "iPhoneを傾けてビー玉を転がします。そっと壁に当てたときと、勢いよく当てたときの音と振動を比べてください。") {
+        DemoScreen(title: "ビー玉の手触り", instruction: "iPhoneを傾けてビー玉を転がします。そっと壁に当てたときと、勢いよく当てたときの音と振動を比べてください。", guide: .marble) {
             GeometryReader { proxy in
                 TimelineView(.animation(paused: scenePhase != .active)) { timeline in
                     ZStack {

@@ -160,7 +160,7 @@ struct NearbyVideoDemo: View {
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
-        DemoScreen(title: "近くの端末へライブ映像", instruction: "両方のiPhoneでWi-FiとBluetoothをオンにします。1台をカメラ役にし、もう1台のモニター役でカメラを選んで接続してください。ルーターは不要です。") {
+        DemoScreen(title: "近くの端末へライブ映像", instruction: "両方のiPhoneでWi-FiとBluetoothをオンにします。1台をカメラ役にし、もう1台のモニター役でカメラを選んで接続してください。ルーターは不要です。", guide: .video) {
             Picker("役割", selection: $cameraRole) {
                 Text("カメラ役").tag(true)
                 Text("モニター役").tag(false)

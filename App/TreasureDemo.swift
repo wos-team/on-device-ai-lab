@@ -3,6 +3,11 @@
 import SwiftUI
 import simd
 
+private struct PeerInvitation: @unchecked Sendable {
+    // Multipeer Connectivity allows responding asynchronously after user input.
+    let respond: (Bool, MCSession?) -> Void
+}
+
 @MainActor
 @Observable
 private final class TreasureFinder: NSObject {
@@ -33,6 +38,7 @@ private final class TreasureFinder: NSObject {
         self.connection = connection
         let ranging = NISession()
         ranging.delegate = self
+        ranging.delegateQueue = .main
         self.ranging = ranging
         let advertiser = MCNearbyServiceAdvertiser(peer: peer, discoveryInfo: nil, serviceType: "ailab-find")
         advertiser.delegate = self
@@ -84,59 +90,82 @@ private final class TreasureFinder: NSObject {
     }
 }
 
-extension TreasureFinder: @preconcurrency MCNearbyServiceBrowserDelegate, @preconcurrency MCNearbyServiceAdvertiserDelegate {
-    func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String: String]?) {
-        guard self.browser === browser, !peers.contains(peerID) else { return }
-        peers.append(peerID)
-        status = "相手の名前をタップして接続してください。"
-    }
-    func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
-        guard self.browser === browser else { return }
-        peers.removeAll { $0 == peerID }
-    }
-    func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) { status = error.localizedDescription }
-    func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) { status = error.localizedDescription }
-
-    func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID,
-                    withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
-        guard self.advertiser === advertiser, invitation == nil, connectedPeer == nil else {
-            invitationHandler(false, nil)
-            return
+extension TreasureFinder: MCNearbyServiceBrowserDelegate, MCNearbyServiceAdvertiserDelegate {
+    nonisolated func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String: String]?) {
+        Task { @MainActor in
+            guard self.browser === browser, !peers.contains(peerID) else { return }
+            peers.append(peerID)
+            status = "相手の名前をタップして接続してください。"
         }
-        invitation = peerID
-        self.invitationHandler = invitationHandler
+    }
+    nonisolated func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
+        Task { @MainActor in
+            guard self.browser === browser else { return }
+            peers.removeAll { $0 == peerID }
+        }
+    }
+    nonisolated func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
+        let message = error.localizedDescription
+        Task { @MainActor in
+            guard self.browser === browser else { return }
+            status = message
+        }
+    }
+    nonisolated func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
+        let message = error.localizedDescription
+        Task { @MainActor in
+            guard self.advertiser === advertiser else { return }
+            status = message
+        }
+    }
+
+    nonisolated func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID,
+                    withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
+        let reply = PeerInvitation(respond: invitationHandler)
+        Task { @MainActor in
+            guard self.advertiser === advertiser, invitation == nil, connectedPeer == nil else {
+                reply.respond(false, nil)
+                return
+            }
+            invitation = peerID
+            self.invitationHandler = reply.respond
+        }
     }
 }
 
-extension TreasureFinder: @preconcurrency MCSessionDelegate {
-    func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
-        guard session === connection else { return }
-        switch state {
-        case .connected:
-            connectedPeer = peerID
-            advertiser?.stopAdvertisingPeer()
-            browser?.stopBrowsingForPeers()
-            status = "接続しました。両方のiPhoneの上側を相手に向けてください。"
-            sendToken()
-        case .notConnected:
-            if connectedPeer == peerID {
-                connectedPeer = nil
-                distance = nil
-                direction = nil
-                status = "接続が切れました。停止して、もう一度探してください。"
+extension TreasureFinder: MCSessionDelegate {
+    nonisolated func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
+        Task { @MainActor in
+            guard session === connection else { return }
+            switch state {
+            case .connected:
+                connectedPeer = peerID
+                advertiser?.stopAdvertisingPeer()
+                browser?.stopBrowsingForPeers()
+                status = "接続しました。両方のiPhoneの上側を相手に向けてください。"
+                sendToken()
+            case .notConnected:
+                if connectedPeer == peerID {
+                    connectedPeer = nil
+                    distance = nil
+                    direction = nil
+                    status = "接続が切れました。停止して、もう一度探してください。"
+                }
+            case .connecting: status = "接続中…"
+            @unknown default: break
             }
-        case .connecting: status = "接続中…"
-        @unknown default: break
         }
     }
 
-    func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
-        guard session === connection else { return }
-        do {
-            guard let token = try NSKeyedUnarchiver.unarchivedObject(ofClass: NIDiscoveryToken.self, from: data) else { return }
-            let configuration = NINearbyPeerConfiguration(peerToken: token)
-            ranging?.run(configuration)
-        } catch { status = error.localizedDescription }
+    nonisolated func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
+        Task { @MainActor in
+            guard session === connection else { return }
+            do {
+                guard let token = try NSKeyedUnarchiver.unarchivedObject(ofClass: NIDiscoveryToken.self, from: data) else { return }
+                let configuration = NINearbyPeerConfiguration(peerToken: token)
+                ranging?.run(configuration)
+            } catch { status = error.localizedDescription }
+        }
     }
 
     nonisolated func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {}
@@ -148,8 +177,18 @@ extension TreasureFinder: @preconcurrency NISessionDelegate {
     func session(_ session: NISession, didUpdate nearbyObjects: [NINearbyObject]) {
         guard session === ranging else { return }
         guard let object = nearbyObjects.first else { return }
-        distance = object.distance
-        direction = object.direction
+        if let measured = object.distance, measured.isFinite, measured >= 0 {
+            distance = distance.map { $0 + (measured - $0) * 0.45 } ?? measured
+        } else {
+            distance = nil
+        }
+        if let measured = object.direction, simd_length_squared(measured) > 0.5,
+           simd_length_squared(measured).isFinite {
+            let blend = direction.map { $0 * 0.45 + measured * 0.55 } ?? measured
+            direction = simd_normalize(blend)
+        } else {
+            direction = nil
+        }
         status = direction == nil ? "距離を測定中。相手へiPhoneの上側を向けると方向が表示されます。" : "矢印の先に相手のiPhoneがあります。"
     }
 
@@ -184,7 +223,7 @@ struct TreasureDemo: View {
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
-        DemoScreen(title: "iPhoneで宝探し", instruction: "2台で「端末を探す」を押し、片方で相手の名前を選択。接続後は片方を隠し、もう片方の距離と矢印で探します。両方の画面を開いたままにしてください。") {
+        DemoScreen(title: "iPhoneで宝探し", instruction: "2台で「端末を探す」を押し、片方で相手の名前を選択。接続後は片方を隠し、もう片方の距離と矢印で探します。両方の画面を開いたままにしてください。", guide: .treasure) {
             if let direction = finder.direction {
                 Image(systemName: "arrow.up")
                     .font(.system(size: 90, weight: .bold))

@@ -134,9 +134,10 @@ struct DepthDemo: View {
     @State private var status = "TrueDepthを起動中…"
     @State private var spatial = false
     @State private var yaw = 0.45
+    @GestureState private var rotationOffset = 0.0
 
     var body: some View {
-        DemoScreen(title: "顔を3Dの点群で見る", instruction: "前面カメラに顔や手を近づけてください。立体モードは横にドラッグすると回転します。") {
+        DemoScreen(title: "顔を3Dの点群で見る", instruction: "前面カメラに顔や手を近づけてください。立体モードは横にドラッグすると回転します。", guide: .depth) {
             Picker("表示", selection: $spatial) {
                 Text("距離マップ").tag(false)
                 Text("3D点群").tag(true)
@@ -145,12 +146,13 @@ struct DepthDemo: View {
 
             Canvas { context, size in
                 let side = min(size.width, size.height)
+                let angle = yaw + rotationOffset
                 for dot in dots {
                     let x: Double
                     let y: Double
                     if spatial {
                         let depth = dot.z - 0.45
-                        x = size.width / 2 + (dot.x * cos(yaw) - depth * sin(yaw)) * side * 2.2
+                        x = size.width / 2 + (dot.x * cos(angle) - depth * sin(angle)) * side * 2.2
                         y = size.height / 2 + dot.y * side * 2.2
                     } else {
                         x = dot.u * size.width
@@ -164,7 +166,13 @@ struct DepthDemo: View {
             .frame(maxHeight: .infinity)
             .background(.black, in: RoundedRectangle(cornerRadius: 18))
             .clipShape(.rect(cornerRadius: 18))
-            .gesture(DragGesture().onChanged { if spatial { yaw = Double($0.translation.width) / 100 + 0.45 } })
+            .gesture(DragGesture()
+                .updating($rotationOffset) { value, offset, _ in
+                    if spatial { offset = Double(value.translation.width) / 100 }
+                }
+                .onEnded { value in
+                    if spatial { yaw += Double(value.translation.width) / 100 }
+                })
             .accessibilityLabel("リアルタイム深度点群")
             DemoStatus(message: dots.isEmpty ? status : "近い  ● 赤　　遠い  ● 青")
         }
@@ -212,13 +220,21 @@ private final class HandReader: NSObject, AVCaptureVideoDataOutputSampleBufferDe
               let hand = request.results?.first,
               let thumb = try? hand.recognizedPoint(.thumbTip),
               let finger = try? hand.recognizedPoint(.indexTip),
-              thumb.confidence > 0.3, finger.confidence > 0.3 else {
+              let wrist = try? hand.recognizedPoint(.wrist),
+              let knuckle = try? hand.recognizedPoint(.middleMCP),
+              [thumb, finger, wrist, knuckle].allSatisfy({ $0.confidence > 0.3 }) else {
             deliver(nil, .infinity)
             return
         }
         let a = thumb.location
         let b = finger.location
-        deliver(CGPoint(x: (a.x + b.x) / 2, y: 1 - (a.y + b.y) / 2), hypot(a.x - b.x, a.y - b.y))
+        // Portrait frames are 480 × 640. Use the same scale on both axes.
+        func distance(_ a: CGPoint, _ b: CGPoint) -> CGFloat {
+            hypot((a.x - b.x) * 0.75, a.y - b.y)
+        }
+        let palm = distance(wrist.location, knuckle.location)
+        guard palm > 0.025 else { deliver(nil, .infinity); return }
+        deliver(CGPoint(x: (a.x + b.x) / 2, y: 1 - (a.y + b.y) / 2), distance(a, b) / palm)
     }
 }
 
@@ -229,10 +245,11 @@ struct AirDrawDemo: View {
     @State private var strokes: [[CGPoint]] = []
     @State private var cursor: CGPoint?
     @State private var drawing = false
+    @State private var pinchFrames = 0
     @State private var status = "カメラを起動中…"
 
     var body: some View {
-        DemoScreen(title: "空中に絵を描く", instruction: "前面カメラに手を向け、親指と人差し指をつまんで動かします。指を離すと線が止まります。") {
+        DemoScreen(title: "空中に絵を描く", instruction: "前面カメラに手を向け、親指と人差し指をつまんで動かします。指を離すと線が止まります。", guide: .hand) {
             GeometryReader { proxy in
                 CameraPreview(session: camera.session)
                     .overlay {
@@ -277,12 +294,26 @@ struct AirDrawDemo: View {
         let delegate = HandReader { point, distance in
             Task { @MainActor in
                 guard reader != nil else { return }
-                cursor = point
-                guard let point, distance < (drawing ? 0.065 : 0.043) else { drawing = false; return }
-                if !drawing { strokes.append([]); drawing = true }
-                if strokes.count > 100 { strokes.removeFirst() }
+                guard let point else {
+                    cursor = nil
+                    drawing = false
+                    pinchFrames = 0
+                    return
+                }
+                let smoothed = cursor.map {
+                    CGPoint(x: $0.x + (point.x - $0.x) * 0.65, y: $0.y + (point.y - $0.y) * 0.65)
+                } ?? point
+                cursor = smoothed
+                if drawing && distance >= 0.48 { drawing = false; pinchFrames = 0 }
+                if !drawing {
+                    pinchFrames = distance < 0.30 ? pinchFrames + 1 : 0
+                    guard pinchFrames >= 2 else { return }
+                    strokes.append([])
+                    if strokes.count > 100 { strokes.removeFirst() }
+                    drawing = true
+                }
                 let index = strokes.count - 1
-                if strokes[index].count < 3000 { strokes[index].append(point) }
+                if strokes[index].count < 3000 { strokes[index].append(smoothed) }
             }
         }
         reader = delegate

@@ -112,7 +112,7 @@ struct AudioMazeDemo: View {
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
-        DemoScreen(title: "耳でたどる迷路", instruction: "イヤホンで音の方向を聞き、矢印で1歩ずつ進んでください。遮音を切り替えると、同じ位置で壁越しの音を比べられます。") {
+        DemoScreen(title: "耳でたどる迷路", instruction: "イヤホンで音の方向を聞き、矢印で1歩ずつ進んでください。遮音を切り替えると、同じ位置で壁越しの音を比べられます。", guide: .maze) {
             ZStack {
                 RoundedRectangle(cornerRadius: 18).fill(.indigo.gradient)
                 Image(systemName: maze.won ? "flag.checkered" : "headphones")

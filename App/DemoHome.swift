@@ -58,6 +58,7 @@ private struct DemoRow: View {
 struct DemoScreen<Content: View>: View {
     let title: String
     let instruction: String
+    let guide: TechnologyGuide
     @ViewBuilder let content: Content
 
     var body: some View {
@@ -65,6 +66,8 @@ struct DemoScreen<Content: View>: View {
             Text(instruction)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            TechnologyGuideButton(guide: guide)
                 .frame(maxWidth: .infinity, alignment: .leading)
             content
         }

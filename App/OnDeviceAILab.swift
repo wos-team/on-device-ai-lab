@@ -102,6 +102,7 @@ private struct ExperimentView: View {
             Section {
                 Text(experiment.detail)
                     .foregroundStyle(.secondary)
+                TechnologyGuideButton(guide: experiment.technology)
                 if !experiment.supportedByOS, let version = experiment.minimum {
                     Label("\(version) 以降が必要です", systemImage: "info.circle")
                 } else if experiment.requiresPhysicalDevice {

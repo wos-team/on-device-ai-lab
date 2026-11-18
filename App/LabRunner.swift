@@ -145,11 +145,11 @@ final class LabRunner {
         case .generate:
             result = try await answer("ユーザーの指示に従い、日本語で書いてください。", text)
         case .summarize:
-            result = try await answer("与えられた本文を日本語で3項目以内に要約。本文にない事実は加えないでください。", text)
+            result = try await answer("本文を日本語で3項目以内に要約してください。日時、場所、締切、持ち物など判断に必要な情報を優先し、数字や固有名詞は原文どおりに扱ってください。本文にない事実は加えないでください。", text)
         case .rewrite:
-            result = try await answer("本文を意味を保って丁寧な日本語に書き換え、書き換えた文だけ返してください。", text)
+            result = try await answer("意味、日時、固有名詞、依頼の条件を保って丁寧な日本語に書き換えてください。書き換えた文だけ返してください。", text)
         case .classify:
-            let session = LanguageModelSession(instructions: "問い合わせを不具合、機能要望、質問のいずれかに分類してください。")
+            let session = LanguageModelSession(instructions: "問い合わせを分類してください。既存機能が想定どおり動かない報告は bug、新規機能や仕様変更の依頼は featureRequest、使い方や情報を尋ねるものは question です。")
             let response = try await session.respond(to: text, generating: TicketCategory.self)
             result = response.content.label
         case .tagging:
@@ -233,7 +233,8 @@ final class LabRunner {
                 #endif
                 let session = LanguageModelSession(tools: tools)
                 defer { showTools(in: session) }
-                result = try await session.respond {
+                let options = GenerationOptions(toolCallingMode: tools.isEmpty ? nil : .required)
+                result = try await session.respond(options: options) {
                     text
                     Attachment(image).label("demoImage")
                 }.content

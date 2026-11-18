@@ -7,13 +7,18 @@ final class DemoNavigationTests: XCTestCase {
         app.launch()
         XCTAssertTrue(app.navigationBars["Apple機能ラボ"].waitForExistence(timeout: 10))
         open("ローカルLLM基本機能", in: app)
-        XCTAssertTrue(app.buttons["文章生成"].exists)
+        open("文章生成", in: app)
+        checkGuide("Foundation Models · LanguageModelSession", in: app)
+        app.navigationBars.buttons.firstMatch.tap()
         app.navigationBars.buttons.firstMatch.tap()
 
         for name in ["顔を3Dの点群で見る", "空中に絵を描く", "拍手で花火",
                      "机にロボットを置く", "体でロボットを動かす", "まばたきゲーム",
                      "ビー玉の手触り", "耳でたどる迷路", "近くの端末へライブ映像", "iPhoneで宝探し"] {
             open(name, in: app)
+            if name == "空中に絵を描く" {
+                checkGuide("Vision · VNDetectHumanHandPoseRequest", in: app)
+            }
             if name == "ビー玉の手触り" {
                 app.buttons["弱い衝突"].tap()
                 app.buttons["強い衝突"].tap()
@@ -53,6 +58,14 @@ final class DemoNavigationTests: XCTestCase {
         }
         app.navigationBars.buttons.firstMatch.tap()
         XCTAssertTrue(app.navigationBars["Apple機能ラボ"].exists)
+    }
+
+    @MainActor
+    private func checkGuide(_ technology: String, in app: XCUIApplication) {
+        app.buttons["技術と応用を見る"].tap()
+        XCTAssertTrue(app.staticTexts[technology].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["別の用途への応用"].exists)
+        app.buttons["閉じる"].tap()
     }
 
     @MainActor
