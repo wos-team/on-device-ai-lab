@@ -64,7 +64,13 @@ final class DemoNavigationTests: XCTestCase {
     private func checkGuide(_ technology: String, in app: XCUIApplication) {
         app.buttons["技術と応用を見る"].tap()
         XCTAssertTrue(app.staticTexts[technology].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["別の用途への応用"].exists)
+        let references = app.staticTexts["Apple公式資料"]
+        for _ in 0..<5 {
+            if references.exists && references.isHittable { break }
+            app.swipeUp()
+        }
+        XCTAssertTrue(references.exists)
+        XCTAssertTrue(references.isHittable)
         app.buttons["閉じる"].tap()
     }
 
